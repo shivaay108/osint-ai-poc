@@ -21,7 +21,7 @@ from osint.core.logger import logger
 WMN_DATA_URL = (
     "https://raw.githubusercontent.com/WebBreacher/WhatsMyName/main/wmn-data.json"
 )
-BUNDLED_SITES_PATH = Path(__file__).parent / "data" / "wmn-data.json"
+BUNDLED_SITES_PATH = Path(__file__).parent / "data" / "wmn-data.json.gz"
 CACHE_DIR_NAME = "osint-toolkit"
 CACHE_FILENAME = "wmn-data.json"
 NSFW_CATEGORY = "xx NSFW xx"
@@ -96,7 +96,12 @@ def user_sites_path() -> Path:
 
 def _read_document(path: Path) -> Any:
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        if path.suffix == ".gz":
+            import gzip
+            content = gzip.decompress(path.read_bytes()).decode("utf-8")
+        else:
+            content = path.read_text(encoding="utf-8")
+        return json.loads(content)
     except (OSError, json.JSONDecodeError) as exc:
         raise ValidationError(f"Cannot read site list {path}: {exc}") from exc
 
